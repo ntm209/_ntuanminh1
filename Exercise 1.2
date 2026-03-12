@@ -1,0 +1,30 @@
+# Bài tập 1.2 - Think Python
+
+# 1. Có bao nhiêu giây trong 42 phút 42 giây?
+minutes = 42
+seconds_remainder = 42
+total_seconds = (minutes * 60) + seconds_remainder
+print(f"1. Tổng số giây: {total_seconds} giây")
+
+# 2. Có bao nhiêu dặm (miles) trong 10 km? (Biết 1.61 km = 1 dặm)
+kilometers = 10
+miles = kilometers / 1.61
+print(f"2. Số dặm trong 10km: {miles:.2f} dặm")
+
+# 3. Tính tốc độ trung bình (Average pace) và vận tốc trung bình (Average speed)
+# Tốc độ trung bình: số phút mỗi dặm (time per mile)
+# Vận tốc trung bình: số dặm mỗi giờ (miles per hour)
+
+# Thời gian tính bằng giờ
+total_hours = total_seconds / 3600
+
+# Vận tốc trung bình (miles per hour)
+average_speed = miles / total_hours
+
+# Tốc độ trung bình (pace - tính theo phút trên mỗi dặm)
+pace_total_minutes = (total_seconds / 60) / miles
+pace_minutes = int(pace_total_minutes)
+pace_seconds = int((pace_total_minutes - pace_minutes) * 60)
+
+print(f"3a. Tốc độ trung bình (Pace): {pace_minutes} phút {pace_seconds} giây mỗi dặm")
+print(f"3b. Vận tốc trung bình (Speed): {average_speed:.2f} dặm/giờ")
