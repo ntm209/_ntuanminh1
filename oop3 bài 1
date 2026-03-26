@@ -1,0 +1,61 @@
+#1. Lớp Con Chó
+class ConCho:
+    def __init__(self, ten, mau_sac, giong, cam_xuc):
+        self.ten = ten
+        self.mau_sac = mau_sac
+        self.giong = giong
+        self.cam_xuc = cam_xuc
+
+    def sua(self):
+        print(f"Con cho {self.ten} {self.mau_sac} {self.giong} {self.cam_xuc} dang sua: Gau gau!")
+    def vayduoi(self):
+        print(f"Con cho {self.ten} {self.mau_sac} {self.giong} {self.cam_xuc} dang vay duoi ")
+    def an(self):
+        print(f"Con cho {self.ten} {self.mau_sac} {self.giong} {self.cam_xuc} dang an com ")
+    def chay(self):
+        print(f"Con cho {self.ten} {self.mau_sac} {self.giong} {self.cam_xuc} dang chay ")    
+cho_cua_toi = ConCho("Lucky", "Den", "Becgie", "Hung du")
+cho_cua_toi.sua()
+cho_cua_toi.vayduoi()
+cho_cua_toi.an()
+cho_cua_toi.chay()
+# 2. LỚP Ô TÔ
+class OTo:
+    def __init__(self, hang, kich_thuoc, mau, gia):
+        self.hang = hang
+        self.kich_thuoc = kich_thuoc
+        self.mau = mau
+        self.gia = gia
+
+    def tangtoc(self):
+        print(f"Xe {self.hang} {self.kich_thuoc} mau {self.mau} gia {self.gia} dang tang toc...")
+    def giamtoc(self):
+        print(f"Xe {self.hang} {self.kich_thuoc} mau {self.mau} gia {self.gia} dang giam toc...")
+    def dam(self):
+        print(f"Canh bao: Xe {self.hang} {self.kich_thuoc} mau {self.mau} vua xay ra va cham (dam)!")
+xe_cua_toi = OTo("Toyota", "SUV", "Trang", "1 Ty")
+xe_cua_toi.tangtoc()
+xe_cua_toi.dam()
+
+print("-" * 30)
+# 3. LỚP TÀI KHOẢN
+class TaiKhoan:
+    def __init__(self, ten_tk, so_tk, ngan_hang, so_du):
+        self.ten_tk = ten_tk
+        self.so_tk = so_tk
+        self.ngan_hang = ngan_hang
+        self.so_du = so_du
+
+    def rut(self, so_tien_rut):
+        self.so_du -= so_tien_rut
+        print(f"TK {self.ten_tk} {self.so_tk} {self.ngan_hang} vua rut {so_tien_rut}. So du con lai: {self.so_du}")
+    def gui(self, so_tien_gui):
+        self.so_du += so_tien_gui
+        print(f"TK {self.ten_tk} {self.so_tk} {self.ngan_hang} vua gui {so_tien_gui}. So du moi: {self.so_du}")
+
+    def kiemtrasodu(self):
+        print(f"TK {self.ten_tk} {self.so_tk} {self.ngan_hang} co so du hien tai la: {self.so_du}")
+tk_cua_toi = TaiKhoan("NGUYEN VAN A", "0987654321", "VietinBank", 5000000)
+tk_cua_toi.kiemtrasodu()
+tk_cua_toi.gui(2000000)
+tk_cua_toi.rut(1000000)
