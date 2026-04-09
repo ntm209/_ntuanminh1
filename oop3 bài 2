@@ -1,0 +1,72 @@
+import math
+
+class Point:
+    """Biểu diễn một điểm trong không gian 2D."""
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+class Rectangle:
+    """Biểu diễn một hình chữ nhật."""
+    def __init__(self, width=0, height=0, corner=None):
+        self.width = width
+        self.height = height
+        self.corner = corner # Góc dưới bên trái (là một đối tượng Point)
+
+class Circle:
+    """Biểu diễn một hình tròn."""
+    def __init__(self, center=None, radius=0):
+        self.center = center # Là một đối tượng Point
+        self.radius = radius
+
+def distance_between_points(p1, p2):
+    """Tính khoảng cách giữa hai điểm p1 và p2."""
+    return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
+
+def point_in_circle(circle, point):
+    """Trả về True nếu điểm nằm trong hoặc trên biên của hình tròn."""
+    dist = distance_between_points(circle.center, point)
+    return dist <= circle.radius
+
+def rect_in_circle(circle, rect):
+    """Trả về True nếu tất cả các góc của hình chữ nhật nằm trong hình tròn."""
+    # Xác định tọa độ 4 góc
+    p = Point()
+    
+    # Duyệt qua 4 góc của hình chữ nhật
+    for x in [rect.corner.x, rect.corner.x + rect.width]:
+        for y in [rect.corner.y, rect.corner.y + rect.height]:
+            p.x, p.y = x, y
+            if not point_in_circle(circle, p):
+                return False
+    return True
+
+
+def rect_circle_overlap(circle, rect):
+    """Trả về True nếu bất kỳ phần nào của hình chữ nhật nằm trong hình tròn."""
+    # Phiên bản đơn giản: Kiểm tra xem có góc nào nằm trong hình tròn không
+    p = Point()
+    for x in [rect.corner.x, rect.corner.x + rect.width]:
+        for y in [rect.corner.y, rect.corner.y + rect.height]:
+            p.x, p.y = x, y
+            if point_in_circle(circle, p):
+                return True
+                
+    # Lưu ý: Một hình chữ nhật có thể đè qua hình tròn mà không có góc nào nằm trong.
+    # Để giải quyết triệt để (phiên bản nâng cao), cần kiểm tra thêm khoảng cách 
+    # từ tâm hình tròn đến các cạnh của hình chữ nhật.
+    return False
+
+# --- CHẠY THỬ NGHIỆM (Test) ---
+
+# Khởi tạo đối tượng Circle (center: 150, 100; radius: 75)
+p_center = Point(150, 100)
+my_circle = Circle(p_center, 75)
+
+# Kiểm tra point_in_circle
+p_test = Point(160, 110)
+print(f"Điểm (160, 110) có trong hình tròn không? {point_in_circle(my_circle, p_test)}")
+
+# Kiểm tra rect_in_circle
+box = Rectangle(width=50, height=50, corner=Point(130, 80))
+print(f"Hình chữ nhật có nằm trọn trong hình tròn không? {rect_in_circle(my_circle, box)}")
