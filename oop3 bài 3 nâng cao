@@ -1,0 +1,79 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class NhanVien {
+private:
+    string tenNhanVien;
+    double luongCoBan;
+    double heSoLuong;
+
+public:
+    // Thuộc tính tĩnh LUONG_MAX (được gạch chân trong UML)
+    // Giả sử mức lương tối đa là 50.000.000
+    static constexpr double LUONG_MAX = 50000000.0; 
+
+    // Constructor để dễ dàng khởi tạo đối tượng
+    NhanVien() : tenNhanVien(""), luongCoBan(0.0), heSoLuong(0.0) {}
+    NhanVien(string ten, double luong, double heSo) 
+        : tenNhanVien(ten), luongCoBan(luong), heSoLuong(heSo) {}
+
+    // YÊU CẦU 4: Viết đầy đủ getter/setter cho tất cả thuộc tính
+    string getTenNhanVien() { return tenNhanVien; }
+    void setTenNhanVien(string ten) { tenNhanVien = ten; }
+
+    double getLuongCoBan() { return luongCoBan; }
+    void setLuongCoBan(double luong) { luongCoBan = luong; }
+
+    double getHeSoLuong() { return heSoLuong; }
+    void setHeSoLuong(double heSo) { heSoLuong = heSo; }
+
+    // YÊU CẦU 1: tinhLuong()
+    double tinhLuong() {
+        return luongCoBan * heSoLuong;
+    }
+
+    // YÊU CẦU 2: inTTin()
+    void inTTin() {
+        cout << "Ten nhan vien: " << tenNhanVien << endl;
+        cout << "Luong co ban: " << luongCoBan << endl;
+        cout << "He so luong: " << heSoLuong << endl;
+        cout << "Luong hien tai: " << tinhLuong() << endl;
+        cout << "-----------------------" << endl;
+    }
+
+    // YÊU CẦU 3: tangLuong(delta)
+    bool tangLuong(double delta) {
+        // Giả định thực tế: delta là mức tăng thêm của "Hệ số lương"
+        double luongMoi = luongCoBan * (heSoLuong + delta);
+
+        if (luongMoi > LUONG_MAX) {
+            cout << "[THONG BAO] Khong the tang! Luong moi (" << luongMoi 
+                 << ") vuot qua LUONG_MAX (" << LUONG_MAX << ")." << endl;
+            return false; // Trong C++ dùng false thay vì False
+        } else {
+            heSoLuong += delta;
+            return true;  // Trong C++ dùng true thay vì True
+        }
+    }
+};
+
+// Hàm main để chạy thử nghiệm các logic trên
+int main() {
+    NhanVien nv("Nguyen Van A", 10000000.0, 2.5); // Lương hiện tại: 25.000.000
+    nv.inTTin();
+
+    cout << ">> Thu tang he so luong them 1.0:" << endl;
+    if (nv.tangLuong(1.0)) {
+        cout << "Tang luong thanh cong!" << endl;
+        nv.inTTin(); // Lương mới sẽ là 35.000.000
+    }
+
+    cout << ">> Thu tang he so luong them 3.0 (Du kien vuot LUONG_MAX):" << endl;
+    if (nv.tangLuong(3.0)) {
+        nv.inTTin();
+    }
+
+    return 0;
+}
