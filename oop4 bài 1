@@ -1,0 +1,57 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class NhanVien {
+private:
+    string tenNhanVien;
+    double luongCoBan;
+    double heSoLuong;
+
+public:
+    double LUONG_MAX = 50000000.0; // 50 triệu
+
+    // Constructor cơ bản
+    NhanVien(string ten, double luong, double heSo) {
+        tenNhanVien = ten;
+        luongCoBan = luong;
+        heSoLuong = heSo;
+    }
+
+    // Getters và Setters
+    string getTenNhanVien() { return tenNhanVien; }
+    void setTenNhanVien(string ten) { tenNhanVien = ten; }
+
+    double getLuongCoBan() { return luongCoBan; }
+    void setLuongCoBan(double luong) { luongCoBan = luong; }
+
+    double getHeSoLuong() { return heSoLuong; }
+    void setHeSoLuong(double heSo) { heSoLuong = heSo; }
+
+    // Tính lương
+    double tinhLuong() {
+        return luongCoBan * heSoLuong;
+    }
+
+    // In thông tin
+    void inTTin() {
+        cout << "Ten nhan vien: " << tenNhanVien << endl;
+        cout << "Luong co ban: " << luongCoBan << endl;
+        cout << "He so luong: " << heSoLuong << endl;
+        cout << "Luong hien tai: " << tinhLuong() << endl;
+    }
+
+    // Tăng lương
+    bool tangLuong(double delta) {
+        double luongMoi = luongCoBan * (heSoLuong + delta);
+
+        if (luongMoi > LUONG_MAX) {
+            cout << "Thong bao: Khong the tang luong vi vuot qua muc toi da!" << endl;
+            return false;
+        } else {
+            heSoLuong = heSoLuong + delta;
+            return true;
+        }
+    }
+};
