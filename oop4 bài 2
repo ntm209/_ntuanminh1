@@ -1,0 +1,76 @@
+#include <iostream>
+
+using namespace std;
+
+// Giả định lớp Point đã được cài đặt cơ bản để phục vụ LineSegment
+class Point {
+public:
+    int x, y;
+    Point(int x = 0, int y = 0) : x(x), y(y) {}
+};
+
+class LineSegment {
+private:
+    // Thuộc tính private
+    Point *d1; 
+    Point *d2;
+
+public:
+    // 1. Hàm xây dựng mặc định, không đối số
+    LineSegment() {
+        d1 = new Point(8, 5);
+        d2 = new Point(1, 0);
+        cout << "Goi Constructor mac dinh" << endl;
+    }
+
+    // 2. Hàm xây dựng có đối số: LineSegment(Point d1, Point d2)
+    // "Không tạo thêm điểm mới" - Ở đây ta gán trực tiếp địa chỉ
+    LineSegment(Point* p1, Point* p2) {
+        d1 = p1;
+        d2 = p2;
+        cout << "Goi Constructor 2 doi so (gan con tro)" << endl;
+    }
+
+    // 3. Hàm xây dựng 4 đối số: LineSegment(int x1, int y1, int x2, int y2)
+    LineSegment(int x1, int y1, int x2, int y2) {
+        d1 = new Point(x1, y1);
+        d2 = new Point(x2, y2);
+        cout << "Goi Constructor 4 doi so nguyen" << endl;
+    }
+
+    // 4. Hàm xây dựng sao chép: LineSegment(LineSegment S)
+    // Thực hiện sao chép sâu (Deep Copy) bằng cách tạo vùng nhớ mới
+    LineSegment(const LineSegment &s) {
+        d1 = new Point(s.d1->x, s.d1->y);
+        d2 = new Point(s.d2->x, s.d2->y);
+        cout << "Goi Constructor sao chep (Deep Copy)" << endl;
+    }
+
+    // Hàm hiển thị để kiểm tra kết quả
+    void display() {
+        cout << "Line: (" << d1->x << "," << d1->y << ") to (" 
+             << d2->x << "," << d2->y << ")" << endl;
+    }
+
+    // Hàm hủy để giải phóng bộ nhớ (tránh rò rỉ bộ nhớ khi dùng con tro)
+    ~LineSegment() {
+        // Lưu ý: Chỉ delete nếu Point được tạo bằng 'new' bên trong class
+        // Ở Constructor số 2, việc quản lý bộ nhớ cần cẩn thận hơn.
+    }
+};
+
+int main() {
+    // Test Constructor mặc định
+    LineSegment l1;
+    l1.display();
+
+    // Test Constructor 4 đối số
+    LineSegment l2(10, 10, 20, 20);
+    l2.display();
+
+    // Test Constructor sao chép (Deep Copy)
+    LineSegment l3 = l2; 
+    l3.display();
+
+    return 0;
+}
