@@ -1,0 +1,121 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// ==========================================
+// 1. LỚP CHA: Hàng Hóa
+// ==========================================
+class HangHoa {
+protected:
+    // Sử dụng protected để các lớp con có thể truy cập trực tiếp
+    string ma_hang;
+    string ten_hang;
+    string nha_sx;
+    double gia;
+
+public:
+    // Hàm thiết lập (Constructor)
+    HangHoa(string ma, string ten, string nsx, double g) {
+        ma_hang = ma;
+        ten_hang = ten;
+        nha_sx = nsx;
+        gia = g;
+    }
+
+    // Phương thức xuất thông tin chung (Dùng virtual để hỗ trợ đa hình)
+    virtual void xuatThongTin() {
+        cout << "Ma hang: " << ma_hang 
+             << " | Ten: " << ten_hang 
+             << " | NSX: " << nha_sx 
+             << " | Gia: " << gia;
+    }
+};
+
+// ==========================================
+// 2. CÁC LỚP CON KẾ THỪA TỪ HÀNG HÓA
+// ==========================================
+
+// Lớp Hàng Điện Máy
+class HangDienMay : public HangHoa {
+private:
+    int tg_baohanh; // Tính bằng tháng
+    int dien_ap;    // Tính bằng V (Volt)
+    int cong_suat;  // Tính bằng W (Watt)
+
+public:
+    // Constructor gọi Constructor của lớp cha để khởi tạo thuộc tính chung
+    HangDienMay(string ma, string ten, string nsx, double g, int bh, int da, int cs) 
+        : HangHoa(ma, ten, nsx, g) {
+        tg_baohanh = bh;
+        dien_ap = da;
+        cong_suat = cs;
+    }
+
+    void xuatThongTin() override {
+        cout << "[Hang Dien May] ";
+        HangHoa::xuatThongTin(); // Gọi hàm xuất của lớp cha
+        cout << " | Bao hanh: " << tg_baohanh << " thang | Dien ap: " 
+             << dien_ap << "V | Cong suat: " << cong_suat << "W" << endl;
+    }
+};
+
+// Lớp Hàng Sành Sứ
+class HangSanhSu : public HangHoa {
+private:
+    string loai_nguyenlieu;
+
+public:
+    HangSanhSu(string ma, string ten, string nsx, double g, string nguyenlieu) 
+        : HangHoa(ma, ten, nsx, g) {
+        loai_nguyenlieu = nguyenlieu;
+    }
+
+    void xuatThongTin() override {
+        cout << "[Hang Sanh Su]  ";
+        HangHoa::xuatThongTin();
+        cout << " | Nguyen lieu: " << loai_nguyenlieu << endl;
+    }
+};
+
+// Lớp Hàng Thực Phẩm
+class HangThucPham : public HangHoa {
+private:
+    string ngay_sx;
+    string ngay_hethan;
+
+public:
+    HangThucPham(string ma, string ten, string nsx, double g, string nsx_date, string hsd_date) 
+        : HangHoa(ma, ten, nsx, g) {
+        ngay_sx = nsx_date;
+        ngay_hethan = hsd_date;
+    }
+
+    void xuatThongTin() override {
+        cout << "[Hang Thuc Pham] ";
+        HangHoa::xuatThongTin();
+        cout << " | Ngay SX: " << ngay_sx << " | Han SD: " << ngay_hethan << endl;
+    }
+};
+
+// ==========================================
+// 3. CHƯƠNG TRÌNH CHÍNH (MAIN)
+// ==========================================
+int main() {
+    cout << "--- THONG TIN CAC MAT HANG ---" << endl << endl;
+
+    // Tạo một mặt hàng điện máy
+    HangDienMay tivi("DM01", "Tivi Sony 4K", "Sony", 15000000, 24, 220, 150);
+    tivi.xuatThongTin();
+
+    // Tạo một mặt hàng sành sứ
+    HangSanhSu chen("SS01", "Chen su Minh Long", "Minh Long", 50000, "Dat set trang");
+    chen.xuatThongTin();
+
+    // Tạo một mặt hàng thực phẩm
+    HangThucPham sua("TP01", "Sua tuoi Vinamilk", "Vinamilk", 35000, "10/04/2026", "10/10/2026");
+    sua.xuatThongTin();
+
+    cout << endl;
+    return 0;
+}
