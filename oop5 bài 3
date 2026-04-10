@@ -1,0 +1,134 @@
+# ==========================================
+# YÊU CẦU 1: Xây dựng các lớp kế thừa
+# ==========================================
+
+class CanBo:
+    def __init__(self, ho_ten, tuoi, gioi_tinh, dia_chi):
+        self.ho_ten = ho_ten
+        self.tuoi = tuoi
+        self.gioi_tinh = gioi_tinh
+        self.dia_chi = dia_chi
+
+    def hien_thi_thong_tin(self):
+        print(f"Họ tên: {self.ho_ten} | Tuổi: {self.tuoi} | Giới tính: {self.gioi_tinh} | Địa chỉ: {self.dia_chi}", end="")
+
+class CongNhan(CanBo):
+    def __init__(self, ho_ten, tuoi, gioi_tinh, dia_chi, bac):
+        super().__init__(ho_ten, tuoi, gioi_tinh, dia_chi)
+        # Bậc công nhân từ 1 đến 10
+        self.bac = bac
+
+    def hien_thi_thong_tin(self):
+        super().hien_thi_thong_tin()
+        print(f" | Cấp bậc: {self.bac}/10")
+
+class KySu(CanBo):
+    def __init__(self, ho_ten, tuoi, gioi_tinh, dia_chi, nganh_dao_tao):
+        super().__init__(ho_ten, tuoi, gioi_tinh, dia_chi)
+        self.nganh_dao_tao = nganh_dao_tao
+
+    def hien_thi_thong_tin(self):
+        super().hien_thi_thong_tin()
+        print(f" | Ngành đào tạo: {self.nganh_dao_tao}")
+
+class NhanVien(CanBo):
+    def __init__(self, ho_ten, tuoi, gioi_tinh, dia_chi, cong_viec):
+        super().__init__(ho_ten, tuoi, gioi_tinh, dia_chi)
+        self.cong_viec = cong_viec
+
+    def hien_thi_thong_tin(self):
+        super().hien_thi_thong_tin()
+        print(f" | Công việc: {self.cong_viec}")
+
+
+# ==========================================
+# YÊU CẦU 2: Xây dựng lớp Quản lý Cán Bộ (QLCB)
+# ==========================================
+
+class QLCB:
+    def __init__(self):
+        self.danh_sach_can_bo = []
+
+    def them_can_bo(self, can_bo):
+        self.danh_sach_can_bo.append(can_bo)
+        print("-> Đã thêm cán bộ thành công!")
+
+    def tim_kiem_theo_ten(self, tu_khoa):
+        ket_qua = [cb for cb in self.danh_sach_can_bo if tu_khoa.lower() in cb.ho_ten.lower()]
+        if not ket_qua:
+            print(f"-> Không tìm thấy cán bộ nào có tên chứa '{tu_khoa}'.")
+        else:
+            print(f"\n--- KẾT QUẢ TÌM KIẾM ---")
+            for cb in ket_qua:
+                cb.hien_thi_thong_tin()
+
+    def hien_thi_danh_sach(self):
+        if not self.danh_sach_can_bo:
+            print("-> Danh sách cán bộ hiện đang trống.")
+        else:
+            print(f"\n--- DANH SÁCH CÁN BỘ ({len(self.danh_sach_can_bo)} người) ---")
+            for cb in self.danh_sach_can_bo:
+                cb.hien_thi_thong_tin()
+
+
+# ==========================================
+# CHƯƠNG TRÌNH CHÍNH (Menu tương tác)
+# ==========================================
+def main():
+    qlcb = QLCB()
+    
+    while True:
+        print("\n" + "="*30)
+        print("   QUẢN LÝ CÁN BỘ")
+        print("="*30)
+        print("1. Thêm mới cán bộ")
+        print("2. Tìm kiếm theo họ tên")
+        print("3. Hiển thị thông tin danh sách")
+        print("4. Thoát khỏi chương trình")
+        
+        lua_chon = input("Nhập lựa chọn của bạn (1-4): ")
+        
+        if lua_chon == '1':
+            print("\nChọn loại cán bộ muốn thêm:")
+            print("a. Công nhân")
+            print("b. Kỹ sư")
+            print("c. Nhân viên")
+            loai = input("Lựa chọn (a/b/c): ").lower()
+            
+            ho_ten = input("Nhập họ tên: ")
+            tuoi = input("Nhập tuổi: ")
+            gioi_tinh = input("Nhập giới tính (Nam/Nữ/Khác): ")
+            dia_chi = input("Nhập địa chỉ: ")
+            
+            if loai == 'a':
+                bac = input("Nhập bậc (1-10): ")
+                cb = CongNhan(ho_ten, tuoi, gioi_tinh, dia_chi, bac)
+            elif loai == 'b':
+                nganh = input("Nhập ngành đào tạo: ")
+                cb = KySu(ho_ten, tuoi, gioi_tinh, dia_chi, nganh)
+            elif loai == 'c':
+                cong_viec = input("Nhập công việc: ")
+                cb = NhanVien(ho_ten, tuoi, gioi_tinh, dia_chi, cong_viec)
+            else:
+                print("Lựa chọn không hợp lệ!")
+                continue
+                
+            qlcb.them_can_bo(cb)
+            
+        elif lua_chon == '2':
+            tu_khoa = input("Nhập tên cán bộ cần tìm: ")
+            qlcb.tim_kiem_theo_ten(tu_khoa)
+            
+        elif lua_chon == '3':
+            qlcb.hien_thi_danh_sach()
+            
+        elif lua_chon == '4':
+            print("Đã thoát chương trình. Tạm biệt!")
+            break
+            
+        else:
+            print("Lựa chọn không hợp lệ, vui lòng thử lại.")
+
+# Chạy chương trình
+if __name__ == "__main__":
+    main()
