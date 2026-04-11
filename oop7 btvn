@@ -1,0 +1,189 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <map>
+#include <fstream>
+#include <sstream>
+#include <memory>
+using namespace std;
+// --- TẦNG MODEL ---
+class CanBo {
+protected:
+    string ho_ten;
+    int tuoi;
+    string gioi_tinh;
+    string dia_chi;
+public:
+    CanBo(string name, int age, string gender, string address)
+        : ho_ten(name), tuoi(age), gioi_tinh(gender), dia_chi(address) {
+    }
+    virtual ~CanBo() {}
+    string getHoTen() { return ho_ten; }
+    virtual string mo_ta() const = 0;
+    virtual string toString() const {
+        return "Ho ten: " + ho_ten + " | Tuoi: " + to_string(tuoi) +
+            " | GT: " + gioi_tinh + " | DC: " + dia_chi;
+    }
+    virtual string toCSV() const {
+        return ho_ten + "," + to_string(tuoi) + "," + gioi_tinh + "," + dia_chi;
+    }
+};
+class CongNhan : public CanBo {
+private:
+    int bac;
+public:
+    CongNhan(string n, int a, string g, string d, int b) : CanBo(n, a, g, d), bac(b) {}
+    string mo_ta() const override { return "[Cong Nhan] Bac: " + to_string(bac); }
+    string toCSV() const override { return "CongNhan," + CanBo::toCSV() + "," + to_string(bac); }
+};
+class KySu : public CanBo {
+private:
+    string nganh_dao_tao;
+public:
+    KySu(string n, int a, string g, string d, string nganh) : CanBo(n, a, g, d), nganh_dao_tao(nganh) {}
+    string mo_ta() const override { return "[Ky Su] Nganh: " + nganh_dao_tao; }
+    string toCSV() const override { return "KySu," + CanBo::toCSV() + "," + nganh_dao_tao; }
+};
+class NhanVien : public CanBo {
+private:
+    string cong_viec;
+public:
+    NhanVien(string n, int a, string g, string d, string cv) : CanBo(n, a, g, d), cong_viec(cv) {}
+    string mo_ta() const override { return "[Nhan Vien] Cong viec: " + cong_viec; }
+    string toCSV() const override { return "NhanVien," + CanBo::toCSV() + "," + cong_viec; }
+};
+// --- TẦNG LOGIC QUẢN LÝ ---
+class QuanLyCanBo {
+private:
+    map<string, shared_ptr<CanBo>> ds_canbo;
+    const string FILE_NAME = "canbo.csv";
+public:
+    void them(shared_ptr<CanBo> cb, bool ghi_file = true) {
+        ds_canbo[cb->getHoTen()] = cb;
+        if (ghi_file) luuFile();
+    }
+    void xoa(const string& ten_can_xoa) {
+        map<string, shared_ptr<CanBo>>::iterator it = ds_canbo.find(ten_can_xoa);
+        if (it != ds_canbo.end()) {
+            ds_canbo.erase(it);
+            cout << "Da xoa can bo: " << ten_can_xoa << endl;
+            luuFile();
+        }
+        else {
+            cout << "Khong tim thay can bo de xoa!" << endl;
+        }
+    }
+    void timKiem(const string& ten_can_tim) {
+        map<string, shared_ptr<CanBo>>::iterator it = ds_canbo.find(ten_can_tim);
+        if (it != ds_canbo.end()) {
+            shared_ptr<CanBo> cb = it->second;
+            cout << cb->toString() << " | " << cb->mo_ta() << endl;
+        }
+        else {
+            cout << "Khong tim thay can bo: " << ten_can_tim << endl;
+        }
+    }
+    void hienThiDanhSach() {
+        for (map<string, shared_ptr<CanBo>>::iterator it = ds_canbo.begin(); it != ds_canbo.end(); ++it) {
+            shared_ptr<CanBo> cb = it->second;
+
+            cout << cb->toString() << " | " << cb->mo_ta() << endl;
+        }
+    }
+    void luuFile() {
+        ofstream f(FILE_NAME);
+        if (f.is_open()) {
+            for (map<string, shared_ptr<CanBo>>::iterator it = ds_canbo.begin(); it != ds_canbo.end(); ++it) {
+                shared_ptr<CanBo> cb = it->second;
+                f << cb->toCSV() << endl;
+            }
+            f.close();
+        }
+    }
+    void docFile() {
+        ifstream f(FILE_NAME);
+        if (!f.is_open()) return;
+        string line;
+        while (getline(f, line)) {
+            if (line.empty()) continue;
+            stringstream ss(line);
+            string loai, ten, gt, dc, last;
+            int tuoi;
+            getline(ss, loai, ',');
+            getline(ss, ten, ',');
+            string tempTuoi;
+            getline(ss, tempTuoi, ',');
+            tuoi = stoi(tempTuoi);
+            getline(ss, gt, ',');
+            getline(ss, dc, ',');
+            getline(ss, last, ',');
+            if (loai == "CongNhan")
+                them(make_shared<CongNhan>(ten, tuoi, gt, dc, stoi(last)), false);
+            else if (loai == "KySu")
+                them(make_shared<KySu>(ten, tuoi, gt, dc, last), false);
+            else if (loai == "NhanVien")
+                them(make_shared<NhanVien>(ten, tuoi, gt, dc, last), false);
+        }
+        f.close();
+    }
+};
+int main() {
+    QuanLyCanBo qlcb;
+    qlcb.docFile();
+    int chon;
+    do {
+        cout << "\n--- QUAN LY CAN BO (C++) ---" << endl;
+        cout << "1. Them moi can bo\n2. Tim kiem theo ten\n3. Hien thi danh sach\n4. Xoa can bo\n0. Thoat" << endl;
+        cout << "Chon: ";
+        cin >> chon;
+        cin.ignore();
+        if (chon == 1) {
+            string ten, gt, dc, special;
+            int tuoi, loai;
+            cout << "Loai (1.Cong nhan, 2.Ky su, 3.Nhan vien): ";
+            cin >> loai;
+            cin.ignore();
+            cout << "Ho ten: ";
+            getline(cin, ten);
+            cout << "Tuoi: ";
+            cin >> tuoi;
+            cin.ignore();
+            cout << "Gioi tinh: ";
+            getline(cin, gt);
+            cout << "Dia chi: ";
+            getline(cin, dc);
+            if (loai == 1) {
+                int bac;
+                cout << "Bac (1-10): ";
+                cin >> bac;
+                qlcb.them(make_shared<CongNhan>(ten, tuoi, gt, dc, bac));
+            }
+            else if (loai == 2) {
+                cout << "Nganh dao tao: ";
+                getline(cin, special);
+                qlcb.them(make_shared<KySu>(ten, tuoi, gt, dc, special));
+            }
+            else if (loai == 3) {
+                cout << "Cong viec: ";
+                getline(cin, special);
+                qlcb.them(make_shared<NhanVien>(ten, tuoi, gt, dc, special));
+            }
+        }
+        else if (chon == 2) {
+            string ten;
+            cout << "Nhap ten can tim: ";
+            getline(cin, ten);
+            qlcb.timKiem(ten);
+        }
+        else if (chon == 3) {
+            qlcb.hienThiDanhSach();
+        }
+        else if (chon == 4) {
+            string ten;
+            cout << "Nhap ten can xoa: ";
+            getline(cin, ten);
+            qlcb.xoa(ten);
+        }
+    } while (chon != 0);
+    return 0;
+}
