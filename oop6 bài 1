@@ -1,0 +1,219 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+#include <stdexcept>
+#include <algorithm>
+#include <fstream>
+
+using namespace std;
+
+// ==========================================
+// 1. CUSTOM EXCEPTIONS
+// ==========================================
+class GiaKhongHopLe : public runtime_error {
+public:
+    GiaKhongHopLe(const string& msg) : runtime_error(msg) {}
+};
+
+class MaHangTrungLap : public runtime_error {
+public:
+    MaHangTrungLap(const string& msg) : runtime_error(msg) {}
+};
+
+// ==========================================
+// 2. LỚP TRỪU TƯỢNG (ABSTRACT BASE CLASS)
+// ==========================================
+class HangHoa {
+private:
+    string ma_hang;
+    string ten_hang;
+    double gia;
+
+protected:
+    string nha_sx;
+
+public:
+    HangHoa(string ma, string ten, string nsx, double g) 
+        : ma_hang(ma), ten_hang(ten), nha_sx(nsx) {
+        setGia(g); // Gọi setter để validate
+    }
+
+    virtual ~HangHoa() = default; // Destructor ảo
+
+    // --- TÍNH ĐÓNG GÓI (Getters/Setters) ---
+    string getMaHang() const { return ma_hang; }
+    string getTenHang() const { return ten_hang; }
+    double getGia() const { return gia; }
+
+    void setGia(double value) {
+        if (value < 0) {
+            throw GiaKhongHopLe("Gia khong hop le. Gia phai >= 0.");
+        }
+        gia = value;
+    }
+
+    // --- ABSTRACT METHODS (Hàm thuần ảo) ---
+    virtual string loai_hang() const = 0;
+    virtual string inTTin() const = 0;
+
+    // --- OPERATOR OVERLOADING (Tương đương Dunder Methods) ---
+    // Tương đương __eq__
+    bool operator==(const HangHoa& other) const {
+        return this->ma_hang == other.ma_hang;
+    }
+
+    // Tương đương __lt__ (để sort theo giá)
+    bool operator<(const HangHoa& other) const {
+        return this->gia < other.gia;
+    }
+
+    // Tương đương __str__ (để print)
+    friend ostream& operator<<(ostream& os, const HangHoa& sp) {
+        os << sp.inTTin();
+        return os;
+    }
+};
+
+// ==========================================
+// 3. CÁC LỚP CON (METHOD OVERRIDING)
+// ==========================================
+class HangDienMay : public HangHoa {
+private:
+    int tg_baohanh;
+    int dien_ap;
+    int cong_suat;
+public:
+    HangDienMay(string ma, string ten, string nsx, double g, int bh, int da, int cs)
+        : HangHoa(ma, ten, nsx, g), tg_baohanh(bh), dien_ap(da), cong_suat(cs) {}
+
+    string loai_hang() const override { return "Dien May"; }
+
+    string inTTin() const override {
+        return "[" + loai_hang() + "] " + getMaHang() + " - " + getTenHang() + 
+               " | Gia: " + to_string((long long)getGia()) + 
+               " | BH: " + to_string(tg_baohanh) + " thang";
+    }
+};
+
+class HangSanhSu : public HangHoa {
+private:
+    string loai_nguyenlieu;
+public:
+    HangSanhSu(string ma, string ten, string nsx, double g, string nl)
+        : HangHoa(ma, ten, nsx, g), loai_nguyenlieu(nl) {}
+
+    string loai_hang() const override { return "Sanh Su"; }
+
+    string inTTin() const override {
+        return "[" + loai_hang() + "] " + getMaHang() + " - " + getTenHang() + 
+               " | Gia: " + to_string((long long)getGia()) + " | NL: " + loai_nguyenlieu;
+    }
+};
+
+class HangThucPham : public HangHoa {
+private:
+    string ngay_sx;
+    string ngay_hethan;
+public:
+    HangThucPham(string ma, string ten, string nsx, double g, string nsx_date, string hsd_date)
+        : HangHoa(ma, ten, nsx, g), ngay_sx(nsx_date), ngay_hethan(hsd_date) {}
+
+    string loai_hang() const override { return "Thuc Pham"; }
+
+    string inTTin() const override {
+        return "[" + loai_hang() + "] " + getMaHang() + " - " + getTenHang() + 
+               " | Gia: " + to_string((long long)getGia()) + " | HSD: " + ngay_hethan;
+    }
+};
+
+// ==========================================
+// 4. QUẢN LÝ
+// ==========================================
+class QuanLyHangHoa {
+private:
+    // C++ dùng Con trỏ thông minh (shared_ptr) để chứa danh sách đa hình
+    vector<shared_ptr<HangHoa>> danh_sach;
+
+public:
+    void them_hang(shared_ptr<HangHoa> sp) {
+        // Kiểm tra trùng mã
+        for (const auto& item : danh_sach) {
+            if (*item == *sp) { // Dùng operator== đã nạp chồng
+                throw MaHangTrungLap("Ma hang '" + sp->getMaHang() + "' da ton tai!");
+            }
+        }
+        danh_sach.push_back(sp);
+    }
+
+    void xuat_danh_sach() {
+        cout << "\n--- DANH SACH HANG HOA (Sap xep theo gia) ---" << endl;
+        // Sao chép ra mảng tạm để sort
+        vector<shared_ptr<HangHoa>> ds_tam = danh_sach;
+        
+        sort(ds_tam.begin(), ds_tam.end(), [](const shared_ptr<HangHoa>& a, const shared_ptr<HangHoa>& b) {
+            return *a < *b; // Dùng operator< đã nạp chồng
+        });
+
+        for (const auto& sp : ds_tam) {
+            cout << *sp << endl; // Dùng operator<< (inTTin)
+        }
+    }
+
+    void luu_file(const string& filename) {
+        // ofstream tự động đóng file khi kết thúc hàm (giống 'with open' trong Python)
+        ofstream outFile(filename);
+        if (!outFile) {
+            cout << "Khong the tao file!" << endl;
+            return;
+        }
+        for (const auto& sp : danh_sach) {
+            outFile << sp->getMaHang() << "," << sp->getTenHang() << "," << sp->getGia() << "\n";
+        }
+        cout << "\n[+] Da luu danh sach vao file '" << filename << "'" << endl;
+    }
+};
+
+// ==========================================
+// 5. CHƯƠNG TRÌNH CHÍNH
+// ==========================================
+int main() {
+    QuanLyHangHoa ql;
+
+    try {
+        // Khởi tạo đối tượng (dùng shared_ptr)
+        auto sp1 = make_shared<HangDienMay>("DM01", "Tivi Sony", "Sony", 15000000, 24, 220, 150);
+        auto sp2 = make_shared<HangSanhSu>("SS01", "Chen Minh Long", "Minh Long", 50000, "Dat set trang");
+        auto sp3 = make_shared<HangThucPham>("TP01", "Sua Vinamilk", "Vinamilk", 35000, "10/04", "10/10");
+        auto sp4 = make_shared<HangThucPham>("TP02", "Banh Mi ABC", "ABC", 15000, "11/04", "15/04");
+
+        ql.them_hang(sp1);
+        ql.them_hang(sp2);
+        ql.them_hang(sp3);
+        ql.them_hang(sp4);
+
+        // Test Exception Trùng mã
+        auto sp_trung = make_shared<HangSanhSu>("SS01", "Dia Su", "Bat Trang", 60000, "Dat set");
+        ql.them_hang(sp_trung);
+
+    } catch (const MaHangTrungLap& e) {
+        cout << "[EXCEPTION CAUGHT] " << e.what() << endl;
+    } catch (const GiaKhongHopLe& e) {
+        cout << "[EXCEPTION CAUGHT] " << e.what() << endl;
+    }
+
+    try {
+        // Test Exception Giá không hợp lệ
+        auto sp_loi = make_shared<HangThucPham>("TP03", "Keo", "Bibica", -5000, "01/01", "02/02");
+    } catch (const exception& e) {
+        cout << "[EXCEPTION CAUGHT] " << e.what() << endl;
+    }
+
+    // In danh sách (sẽ tự động chạy hàm Sort)
+    ql.xuat_danh_sach();
+
+    // Test File
+    ql.luu_file("data_hanghoa.txt");
+
+    return 0;
+}
