@@ -1,0 +1,249 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+#include <stdexcept>
+#include <algorithm>
+#include <fstream>
+
+using namespace std;
+
+// ==========================================
+// 1. CUSTOM EXCEPTIONS (Ngoại lệ tự định nghĩa)
+// ==========================================
+class TuoiKhongHopLe : public runtime_error {
+public:
+    TuoiKhongHopLe(const string& msg) : runtime_error(msg) {}
+};
+
+class BacKhongHopLe : public runtime_error {
+public:
+    BacKhongHopLe(const string& msg) : runtime_error(msg) {}
+};
+
+// ==========================================
+// 2. LỚP TRỪU TƯỢNG CÁN BỘ (Thay cho ABC trong Python)
+// ==========================================
+class CanBo {
+protected:
+    string ho_ten;
+    int tuoi;
+    string gioi_tinh;
+    string dia_chi;
+
+public:
+    CanBo(string ten, int t, string gt, string dc)
+        : ho_ten(ten), gioi_tinh(gt), dia_chi(dc) {
+        setTuoi(t); // Gọi setter để validate dữ liệu ngay khi khởi tạo
+    }
+
+    // Destructor ảo bắt buộc cho lớp có tính đa hình
+    virtual ~CanBo() = default;
+
+    // --- GETTER & SETTER (Thay thế cho @property) ---
+    void setTuoi(int t) {
+        if (t < 18 || t > 65) {
+            throw TuoiKhongHopLe("Loi: Tuoi phai tu 18 - 65 (Nhap vao: " + to_string(t) + ").");
+        }
+        tuoi = t;
+    }
+    string getHoTen() const { return ho_ten; }
+    int getTuoi() const { return tuoi; }
+
+    // --- ABSTRACT METHOD (@abstractmethod) ---
+    // Hàm thuần ảo (Pure virtual method)
+    virtual string mo_ta() const = 0;
+
+    // --- MAGIC METHODS (Nạp chồng toán tử C++) ---
+    // Tương đương __eq__: So sánh cán bộ theo Họ tên + Tuổi
+    bool operator==(const CanBo& other) const {
+        return (this->ho_ten == other.ho_ten && this->tuoi == other.tuoi);
+    }
+
+    // Tương đương __lt__: Sắp xếp danh sách theo Tên (ABC)
+    bool operator<(const CanBo& other) const {
+        return this->ho_ten < other.ho_ten;
+    }
+
+    // Tương đương __str__ / __repr__: Định dạng khi in ra màn hình
+    friend ostream& operator<<(ostream& os, const CanBo& cb) {
+        os << cb.mo_ta();
+        return os;
+    }
+
+    // Hàm hỗ trợ xuất ra chuỗi chuẩn CSV để lưu file
+    virtual string to_csv() const = 0;
+};
+
+// ==========================================
+// 3. CÁC LỚP CON (Kế thừa & Ghi đè)
+// ==========================================
+class CongNhan : public CanBo {
+private:
+    int bac;
+public:
+    CongNhan(string ten, int t, string gt, string dc, int b)
+        : CanBo(ten, t, gt, dc) {
+        setBac(b);
+    }
+
+    // Validation cho Bậc (1-10)
+    void setBac(int b) {
+        if (b < 1 || b > 10) {
+            throw BacKhongHopLe("Loi: Bac cong nhan phai tu 1 - 10 (Nhap vao: " + to_string(b) + ").");
+        }
+        bac = b;
+    }
+
+    string mo_ta() const override {
+        return "[Cong Nhan] " + ho_ten + " | Tuoi: " + to_string(tuoi) + " | GT: " + gioi_tinh +
+            " | DC: " + dia_chi + " | Bac: " + to_string(bac) + "/10";
+    }
+
+    string to_csv() const override {
+        return "CongNhan," + ho_ten + "," + to_string(tuoi) + "," + gioi_tinh + "," + dia_chi + "," + to_string(bac);
+    }
+};
+
+class KySu : public CanBo {
+private:
+    string nganh_dao_tao;
+public:
+    KySu(string ten, int t, string gt, string dc, string nganh)
+        : CanBo(ten, t, gt, dc), nganh_dao_tao(nganh) {
+    }
+
+    string mo_ta() const override {
+        return "[Ky Su] " + ho_ten + " | Tuoi: " + to_string(tuoi) + " | GT: " + gioi_tinh +
+            " | DC: " + dia_chi + " | Nganh: " + nganh_dao_tao;
+    }
+
+    string to_csv() const override {
+        return "KySu," + ho_ten + "," + to_string(tuoi) + "," + gioi_tinh + "," + dia_chi + "," + nganh_dao_tao;
+    }
+};
+
+class NhanVien : public CanBo {
+private:
+    string cong_viec;
+public:
+    NhanVien(string ten, int t, string gt, string dc, string cv)
+        : CanBo(ten, t, gt, dc), cong_viec(cv) {
+    }
+
+    string mo_ta() const override {
+        return "[Nhan Vien] " + ho_ten + " | Tuoi: " + to_string(tuoi) + " | GT: " + gioi_tinh +
+            " | DC: " + dia_chi + " | CV: " + cong_viec;
+    }
+
+    string to_csv() const override {
+        return "NhanVien," + ho_ten + "," + to_string(tuoi) + "," + gioi_tinh + "," + dia_chi + "," + cong_viec;
+    }
+};
+
+// ==========================================
+// 4. LỚP QUẢN LÝ
+// ==========================================
+class QLCB {
+private:
+    vector<shared_ptr<CanBo>> ds_canbo;
+
+public:
+    void them_moi(shared_ptr<CanBo> cb) {
+        // Kiểm tra xem nhân sự đã tồn tại chưa (Sử dụng operator==)
+        for (const auto& item : ds_canbo) {
+            if (*item == *cb) {
+                cout << "[-] Can bo '" << cb->getHoTen() << "' (Tuoi: " << cb->getTuoi() << ") da ton tai trong he thong!" << endl;
+                return;
+            }
+        }
+        ds_canbo.push_back(cb);
+        cout << "[+] Da them: " << cb->getHoTen() << endl;
+    }
+
+    void tim_kiem(const string& ten) {
+        cout << "\n--- KET QUA TIM KIEM: '" << ten << "' ---" << endl;
+        bool found = false;
+        for (const auto& cb : ds_canbo) {
+            // Tìm chuỗi con trong tên
+            if (cb->getHoTen().find(ten) != string::npos) {
+                cout << *cb << endl; // Đa hình: Tự động gọi toán tử <<
+                found = true;
+            }
+        }
+        if (!found) cout << "Khong tim thay can bo nao phu hop." << endl;
+    }
+
+    void hien_thi() {
+        cout << "\n--- DANH SACH CAN BO (" << ds_canbo.size() << ") ---" << endl;
+
+        // Tạo một bản sao để sắp xếp (Không làm ảnh hưởng ds gốc)
+        vector<shared_ptr<CanBo>> ds_tam = ds_canbo;
+
+        // Sắp xếp danh sách sử dụng operator< (theo ABC)
+        sort(ds_tam.begin(), ds_tam.end(), [](const shared_ptr<CanBo>& a, const shared_ptr<CanBo>& b) {
+            return *a < *b;
+            });
+
+        for (const auto& cb : ds_tam) {
+            cout << *cb << endl;
+        }
+    }
+
+    void luu_file(const string& filename) {
+        // Tương đương "with open() as f" của Python, 
+        // ofstream tự động giải phóng tài nguyên (RAII) khi kết thúc hàm
+        ofstream outFile(filename);
+        if (!outFile) {
+            cout << "Loi tao file!" << endl;
+            return;
+        }
+        for (const auto& cb : ds_canbo) {
+            outFile << cb->to_csv() << "\n";
+        }
+        cout << "\n[+] Da luu du lieu vao file '" << filename << "'" << endl;
+    }
+};
+
+// ==========================================
+// 5. CHƯƠNG TRÌNH CHÍNH (TEST CASES)
+// ==========================================
+int main() {
+    QLCB ql;
+
+    cout << "--- 1. TEST THEM MOI & NGOAI LE ---" << endl;
+    try {
+        ql.them_moi(make_shared<CongNhan>("Nguyen Van A", 30, "Nam", "Ha Noi", 5));
+        ql.them_moi(make_shared<KySu>("Tran Thi B", 28, "Nu", "Da Nang", "CNTT"));
+        ql.them_moi(make_shared<NhanVien>("Le Van C", 40, "Nam", "TP.HCM", "Ke Toan"));
+
+        // Cố tình tạo ngoại lệ Tuổi
+        auto loi_tuoi = make_shared<CongNhan>("Hoang D", 17, "Nam", "Hue", 3);
+    }
+    catch (const exception& e) {
+        cout << "[EXCEPTION] " << e.what() << endl;
+    }
+
+    try {
+        // Cố tình tạo ngoại lệ Bậc
+        auto loi_bac = make_shared<CongNhan>("Pham E", 25, "Nam", "Vinh", 12);
+    }
+    catch (const exception& e) {
+        cout << "[EXCEPTION] " << e.what() << endl;
+    }
+
+    // Cố tình thêm trùng lặp dữ liệu (Đã có Nguyễn Văn A 30 tuổi ở trên)
+    ql.them_moi(make_shared<CongNhan>("Nguyen Van A", 30, "Nam", "Ha Noi", 6));
+
+    // --- 2. HIỂN THỊ & SẮP XẾP ---
+    // (Kết quả sẽ được xếp theo vần L -> N -> T)
+    ql.hien_thi();
+
+    // --- 3. TÌM KIẾM ---
+    ql.tim_kiem("Tran");
+
+    // --- 4. GHI FILE ---
+    ql.luu_file("quan_ly_can_bo.csv");
+
+    return 0;
+}
